@@ -1,8 +1,8 @@
 import time
+import requests
+
 from collections import deque
 from typing import Optional
-
-import requests
 
 class RateLimiter:
     """

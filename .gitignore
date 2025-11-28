@@ -2,3 +2,10 @@
 __pycache__
 
 .DS_store
+
+# private
+*.docx
+
+debug_html/
+tooltip/
+tooltip.*

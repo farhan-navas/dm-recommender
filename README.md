@@ -15,18 +15,20 @@ Even though the pipeline currently writes CSVs, we treat them as two normalized 
 | `forum_url`  | text        | Parent forum listing used when crawling.                            |
 | `first_seen` | timestamptz | When the scraper first encountered the thread.                      |
 | `last_seen`  | timestamptz | When the thread was last re-scraped.                                |
+| `scraped_at` | timestamptz | Timestamp for the current extraction batch.                         |
 
 ### `Post`
 
-| column      | type        | notes                                                                        |
-| ----------- | ----------- | ---------------------------------------------------------------------------- |
-| `post_id`   | text        | XenForo identifier (last digits of `data-content` / `id`). Primary key.      |
-| `thread_id` | text        | FK → `thread.thread_id`.                                                     |
-| `page_url`  | text        | Concrete page that was scraped (thread pagination aware).                    |
-| `user_id`   | text        | FK → `user.user_id`.                                                         |
-| `username`  | text        | Username displayed on the post (overwritten by tooltip version when cached). |
-| `timestamp` | timestamptz | Raw value from `<time datetime>`; ISO 8601 string when stored in CSV.        |
-| `text`      | text        | Post body flattened to newline-separated plain text.                         |
+| column       | type        | notes                                                                        |
+| ------------ | ----------- | ---------------------------------------------------------------------------- |
+| `post_id`    | text        | XenForo identifier (last digits of `data-content` / `id`). Primary key.      |
+| `thread_id`  | text        | FK → `thread.thread_id`.                                                     |
+| `page_url`   | text        | Concrete page that was scraped (thread pagination aware).                    |
+| `user_id`    | text        | FK → `user.user_id`.                                                         |
+| `username`   | text        | Username displayed on the post (overwritten by tooltip version when cached). |
+| `timestamp`  | timestamptz | Raw value from `<time datetime>`; ISO 8601 string when stored in CSV.        |
+| `text`       | text        | Post body flattened to newline-separated plain text.                         |
+| `scraped_at` | timestamptz | When this particular post row was emitted by the scraper.                    |
 
 ### `User`
 
@@ -37,14 +39,20 @@ Even though the pipeline currently writes CSVs, we treat them as two normalized 
 | `profile_url`         | text        | Fully-qualified profile link without `/tooltip`.       |
 | `join_date`           | timestamptz | Tooltip-provided ISO datetime.                         |
 | `role`                | text        | Tooltip “user title” (e.g., Banned, Member).           |
-| `gender`              | text/null   | Placeholder for future enrichment; currently `NULL`.   |
-| `country_of_birth`    | text/null   | Placeholder for future enrichment; currently `NULL`.   |
+| `gender`              | text/null   | Pulled from the `About` tab when present.              |
+| `country_of_birth`    | text/null   | Pulled from the `About` tab when present.              |
+| `location`            | text/null   | “From …” location from the profile header/`About` tab. |
+| `mbti_type`           | text/null   | Myers-Briggs type string (`About` tab).                |
+| `enneagram_type`      | text/null   | Enneagram string (`About` tab).                        |
+| `socionics`           | text/null   | Socionics designation, when users fill it out.         |
+| `occupation`          | text/null   | Free-form occupation field from the `About` tab.       |
 | `replies`             | integer     | Tooltip “Replies” count.                               |
 | `discussions_created` | integer     | Tooltip “Discussions created” count.                   |
 | `reaction_score`      | integer     | Tooltip “Reaction score”.                              |
 | `points`              | integer     | Tooltip “Points”.                                      |
 | `media_count`         | integer     | Tooltip “Media” uploads.                               |
 | `showcase_count`      | integer     | Tooltip “Showcase items”.                              |
+| `scraped_at`          | timestamptz | When this profile snapshot was saved.                  |
 
 CSV rows store blanks for `NULL` values so they load cleanly later.
 
@@ -57,16 +65,17 @@ To capture edges between users, we derive an interaction row any time a post is 
 
 Schema:
 
-| column             | type    | notes                                                                                        |
-| ------------------ | ------- | -------------------------------------------------------------------------------------------- |
-| `interaction_id`   | uuid    | Synthetic PK                                                                                 |
-| `replying_post_id` | text    | FK → `post.post_id` (the reply), source post id                                              |
-| `target_post_id`   | text    | FK → `post.post_id` (the quoted/mentioned post). Nullable when we only know the target user. |
-| `source_user_id`   | text    | FK → `user.user_id`, the person replying                                                     |
-| `target_user_id`   | text    | FK → `user.user_id`, the person that is being replied to                                     |
-| `thread_id`        | text    | Convenience FK for filtering.                                                                |
-| `interaction_type` | text    | Enum (`quote`, `mention`, `implicit_reply`).                                                 |
-| `confidence`       | numeric | Between 0–1; `1` for explicit quotes, lower when inferred heuristically.                     |
+| column             | type        | notes                                                                                        |
+| ------------------ | ----------- | -------------------------------------------------------------------------------------------- |
+| `interaction_id`   | uuid        | Synthetic PK                                                                                 |
+| `replying_post_id` | text        | FK → `post.post_id` (the reply), source post id                                              |
+| `target_post_id`   | text        | FK → `post.post_id` (the quoted/mentioned post). Nullable when we only know the target user. |
+| `source_user_id`   | text        | FK → `user.user_id`, the person replying                                                     |
+| `target_user_id`   | text        | FK → `user.user_id`, the person that is being replied to                                     |
+| `thread_id`        | text        | Convenience FK for filtering.                                                                |
+| `interaction_type` | text        | Enum (`quote`, `mention`, `implicit_reply`).                                                 |
+| `confidence`       | numeric     | Between 0–1; `1` for explicit quotes, lower when inferred heuristically.                     |
+| `scraped_at`       | timestamptz | Timestamp applied when emitting the derived edge.                                            |
 
 ## Running scraper
 

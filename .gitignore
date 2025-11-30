@@ -7,5 +7,6 @@ __pycache__
 *.docx
 
 debug_html/
+sample_html/*
 tooltip/
 tooltip.*

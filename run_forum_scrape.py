@@ -1,4 +1,6 @@
 import csv
+
+from scraper.data_model import POSTS_FIELDNAMES, USERS_FIELDNAMES
 from scraper.post_scraper import get_thread_list, scrape_thread
 
 def main():
@@ -18,38 +20,11 @@ def main():
     )
     print(f"[main] Fetched {len(thread_urls)} thread URLs")
 
-    # Prepare CSV writers
-    posts_fieldnames = [
-        "thread_url",
-        "page_url",
-        "post_id",
-        "user_id",
-        "username",
-        "timestamp",
-        "text",
-    ]
-    users_fieldnames = [
-        "user_id",
-        "username",
-        "profile_url",
-        "join_date",
-        "role",
-        "gender",
-        "country_of_birth",
-        "replies",
-        "discussions_created",
-        "reaction_score",
-        "points",
-        "media_count",
-        "showcase_count",
-        "scraped_at",
-    ]
-
     user_cache: dict[str, dict] = {}
 
     # Scrape posts + users 
     with open(posts_csv_path, "w", newline="", encoding="utf-8") as posts_f:
-        posts_writer = csv.DictWriter(posts_f, fieldnames=posts_fieldnames)
+        posts_writer = csv.DictWriter(posts_f, fieldnames=POSTS_FIELDNAMES)
         posts_writer.writeheader()
 
         for i, t_url in enumerate(thread_urls, start=1):
@@ -65,7 +40,7 @@ def main():
 
     # Write users.csv
     with open(users_csv_path, "w", newline="", encoding="utf-8") as users_f:
-        users_writer = csv.DictWriter(users_f, fieldnames=users_fieldnames)
+        users_writer = csv.DictWriter(users_f, fieldnames=USERS_FIELDNAMES)
         users_writer.writeheader()
         for user in user_cache.values():
             users_writer.writerow(user)

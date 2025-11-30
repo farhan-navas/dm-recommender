@@ -7,6 +7,12 @@ from bs4 import BeautifulSoup
 from scraper.rate_limiter import fetch
 
 
+def _safe_text(element) -> str | None:
+    if not element:
+        return None
+    return element.get_text(" ", strip=True)
+
+
 def extract_user_id_from_profile_url(profile_url: str) -> str | None:
     """
     Extract a stable user_id from a XenForo-style member URL.
@@ -71,6 +77,20 @@ def _fallback_username(profile_url: str) -> str | None:
     return path.split("/")[-1] or None
 
 
+def _extract_location_from_header(soup: BeautifulSoup) -> str | None:
+    link = soup.select_one(".memberHeader-blurb a[href*='location-info']")
+    if link:
+        return link.get_text(strip=True)
+
+    blurb = soup.select_one(".memberHeader-blurb")
+    if not blurb:
+        return None
+
+    text = blurb.get_text(" ", strip=True)
+    match = re.search(r"from\s+(.*)", text, re.IGNORECASE)
+    return match.group(1).strip(" .") if match else None
+
+
 def _build_user_record(
     *,
     user_id: str | None,
@@ -79,6 +99,13 @@ def _build_user_record(
     join_date: str | None,
     role: str | None,
     stats: dict[str, str],
+    gender: str | None = None,
+    country_of_birth: str | None = None,
+    location: str | None = None,
+    mbti_type: str | None = None,
+    enneagram_type: str | None = None,
+    socionics: str | None = None,
+    occupation: str | None = None,
 ) -> dict:
     def stat_value(label: str) -> int | None:
         return _clean_int(stats.get(label))
@@ -91,8 +118,13 @@ def _build_user_record(
         "profile_url": profile_url,
         "join_date": join_date,
         "role": role,
-        "gender": None,
-        "country_of_birth": None,
+        "gender": gender,
+        "country_of_birth": country_of_birth,
+        "location": location,
+        "mbti_type": mbti_type,
+        "enneagram_type": enneagram_type,
+        "socionics": socionics,
+        "occupation": occupation,
         "replies": stat_value("replies"),
         "discussions_created": stat_value("discussions created"),
         "reaction_score": stat_value("reaction score"),
@@ -115,6 +147,53 @@ def _has_meaningful_profile_data(user: dict) -> bool:
     if any(user.get(k) is not None for k in metric_keys):
         return True
     return bool(user.get("join_date") or user.get("role"))
+
+
+def parse_user_about_page(html: str) -> dict[str, str | None]:
+    """Extract optional demographic/profile fields from the About tab."""
+    soup = BeautifulSoup(html, "html.parser")
+    details: dict[str, str | None] = {}
+
+    def _label_key(raw: str) -> str:
+        cleaned = re.sub(r"[:\s]+", " ", raw.lower()).strip()
+        return re.sub(r"[^a-z0-9 ]", "", cleaned)
+
+    for row in soup.select(".flex-row"):
+        label_el = row.select_one(".about-identifier")
+        if not label_el:
+            continue
+        raw_label = _safe_text(label_el)
+        if not raw_label:
+            continue
+        key_hint = _label_key(raw_label)
+
+        value_el = row.select_one(".about-content") or row.select_one(".about-custom-content")
+        value = _safe_text(value_el)
+        if not value:
+            continue
+
+        if key_hint.startswith("location"):
+            details["location"] = value
+        elif key_hint.startswith("gender"):
+            details["gender"] = value
+        elif "myers briggs" in key_hint or key_hint == "mbti" or "type indicator" in key_hint:
+            details["mbti_type"] = value
+        elif "enneagram" in key_hint:
+            details["enneagram_type"] = value
+        elif "country of birth" in key_hint:
+            details["country_of_birth"] = value
+        elif "socionics" in key_hint:
+            details["socionics"] = value
+        elif "occupation" in key_hint:
+            details["occupation"] = value
+
+    return details
+
+
+def _merge_user_details(user: dict, extra: dict[str, str | None]) -> None:
+    for key, value in extra.items():
+        if value:
+            user[key] = value
 
 
 def parse_user_profile_page(html: str, profile_url: str, user_id: str | None) -> dict | None:
@@ -140,6 +219,8 @@ def parse_user_profile_page(html: str, profile_url: str, user_id: str | None) ->
     if time_el:
         join_date = _as_string(time_el.get("datetime")) or time_el.get_text(strip=True)
 
+    location = _extract_location_from_header(soup)
+
     stats = _collect_stats(soup.select("dl.pairs"))
     if not join_date:
         join_date = stats.get("joined")
@@ -151,6 +232,7 @@ def parse_user_profile_page(html: str, profile_url: str, user_id: str | None) ->
         join_date=join_date,
         role=role,
         stats=stats,
+        location=location,
     )
 
     return user if _has_meaningful_profile_data(user) else None
@@ -198,6 +280,14 @@ def fetch_user_profile(profile_url: str) -> dict | None:
         print(f"[user] Could not parse user_id from {profile_url}")
         return None
 
+    about_data: dict[str, str | None] = {}
+    about_url = profile_url.rstrip("/") + "/about"
+    try:
+        about_html = fetch(about_url)
+        about_data = parse_user_about_page(about_html)
+    except Exception as exc:  # noqa: BLE001 - enrichment is optional
+        print(f"[user] Error fetching about tab {about_url}: {exc}")
+
     try:
         profile_html = fetch(profile_url)
     except Exception as exc:  # noqa: BLE001 - fallback to tooltip on any failure
@@ -207,13 +297,18 @@ def fetch_user_profile(profile_url: str) -> dict | None:
     if profile_html:
         profile = parse_user_profile_page(profile_html, profile_url, user_id)
         if profile:
+            if about_data:
+                _merge_user_details(profile, about_data)
             return profile
         print(f"[user] Profile page lacked data for {profile_url}, falling back to tooltip")
 
     tooltip_url = profile_url.rstrip("/") + "/tooltip"
     print(f"[user] Fetching tooltip {tooltip_url} (user_id={user_id})")
     tooltip_html = fetch(tooltip_url)
-    return parse_user_tooltip(tooltip_html, profile_url, user_id)
+    tooltip_user = parse_user_tooltip(tooltip_html, profile_url, user_id)
+    if about_data and tooltip_user:
+        _merge_user_details(tooltip_user, about_data)
+    return tooltip_user
 
 
 def get_or_fetch_user(profile_url: str, user_cache: dict[str, dict]) -> dict | None:

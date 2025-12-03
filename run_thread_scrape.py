@@ -1,5 +1,3 @@
-"""Run the scraper against a single thread URL."""
-
 import csv
 
 from scraper.data_model import (

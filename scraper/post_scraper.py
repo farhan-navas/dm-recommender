@@ -1,5 +1,3 @@
-"""Thread and post scraping utilities."""
-
 import hashlib
 import re
 from datetime import datetime

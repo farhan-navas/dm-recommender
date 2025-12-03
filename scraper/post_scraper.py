@@ -1,9 +1,11 @@
-# post_scraper.py
+"""Thread and post scraping utilities."""
 
-import csv
 import hashlib
 import re
+from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
+from uuid import uuid4
 
 from bs4 import BeautifulSoup
 
@@ -20,6 +22,8 @@ THREAD_LINK_SELECTOR = "h3.structItem-title a"
 POST_SELECTOR = "article.js-post"
 USERNAME_SELECTOR = ".MessageCard__user-info__name"
 BODY_SELECTOR = ".message-body .bbWrapper"
+QUOTE_BLOCK_SELECTOR = "blockquote.bbCodeBlock--quote"
+QUOTE_SOURCE_LINK_SELECTOR = ".bbCodeBlock-sourceJump"
 
 
 def absolute_url(href: str) -> str:
@@ -29,11 +33,92 @@ def absolute_url(href: str) -> str:
         return BASE_URL + href
     return BASE_URL + "/" + href.lstrip("/")
 
-
 def _is_member_link(href: str | None) -> bool:
     """Return True when href looks like a member profile link."""
     return bool(href and "/members/" in href)
 
+
+def _current_scrape_timestamp() -> str:
+    """Return an ISO8601 timestamp used for row-level bookkeeping."""
+    return datetime.now().isoformat(timespec="seconds") + "Z"
+
+
+def _thread_id_from_url(thread_url: str) -> str:
+    """Derive a stable thread identifier from the thread URL."""
+    path = urlparse(thread_url).path.rstrip("/")
+    match = re.search(r"\.(\d+)$", path)
+    if match:
+        return match.group(1)
+    match = re.search(r"(\d+)$", path)
+    if match:
+        return match.group(1)
+    return hashlib.sha1(thread_url.encode("utf-8", "ignore")).hexdigest()[:16]
+
+
+def _parse_post_id_from_quote_link(link) -> str | None:
+    if not link:
+        return None
+    selector = link.get("data-content-selector")
+    if selector:
+        match = re.search(r"post-(\d+)", selector)
+        if match:
+            return match.group(1)
+    href = link.get("href")
+    if href:
+        match = re.search(r"(?:id=|post-)(\d+)", href)
+        if match:
+            return match.group(1)
+    return None
+
+
+def _clean_quote_username(raw: str | None) -> str | None:
+    if not raw:
+        return None
+    cleaned = raw.strip()
+    cleaned = re.sub(r"\s*said:?$", "", cleaned, flags=re.IGNORECASE)
+    return cleaned or None
+
+
+def _extract_quote_targets(post_div) -> list[dict]:
+    quotes: list[dict] = []
+    for block in post_div.select(QUOTE_BLOCK_SELECTOR):
+        link = block.select_one(QUOTE_SOURCE_LINK_SELECTOR)
+        target_post_id = _parse_post_id_from_quote_link(link)
+        username = _clean_quote_username(link.get_text(" ", strip=True) if link else None)
+        if not target_post_id and not username:
+            continue
+        quotes.append({
+            "target_post_id": target_post_id,
+            "target_username": username,
+        })
+    return quotes
+
+
+def _extract_mentions(body_el) -> list[dict]:
+    mentions: list[dict] = []
+    if not body_el:
+        return mentions
+
+    seen: set[tuple[str | None, str | None]] = set()
+    for link in body_el.select("a"):
+        href = link.get("href")
+        if not href or "/members/" not in href:
+            continue
+        classes = link.get("class") or []
+        if not link.get("data-user-id") and not any(cls.startswith("username") for cls in classes):
+            continue
+        profile_url = absolute_url(str(href))
+        username = link.get_text(strip=True) or None
+        key = (profile_url, username)
+        if key in seen:
+            continue
+        seen.add(key)
+        mentions.append({
+            "profile_url": profile_url,
+            "username": username,
+            "user_id": extract_user_id_from_profile_url(profile_url),
+        })
+    return mentions
 
 def get_thread_list(
     forum_url: str,
@@ -88,7 +173,6 @@ def get_thread_list(
     print(f"[threads] Collected {len(ordered_threads)} thread URLs.")
     return ordered_threads
 
-
 def get_thread_pages(thread_url: str, max_pages: int = 20):
     """
     Return a list of URLs for all pages inside a thread.
@@ -113,7 +197,6 @@ def get_thread_pages(thread_url: str, max_pages: int = 20):
 
     return pages
 
-
 def _extract_post_id(post_div) -> str | None:
     """
     Try to extract a stable post_id from attributes.
@@ -132,7 +215,6 @@ def _extract_post_id(post_div) -> str | None:
             return m.group(1)
 
     return None
-
 
 def parse_posts_from_page(html: str):
     """
@@ -157,7 +239,7 @@ def parse_posts_from_page(html: str):
 
     posts = []
 
-    for idx, post_div in enumerate(soup.select(POST_SELECTOR), start=1):
+    for post_div in soup.select(POST_SELECTOR):
         # Username
         user_el = post_div.select_one(USERNAME_SELECTOR)
         username = user_el.get_text(strip=True) if user_el else post_div.get("data-author")
@@ -181,6 +263,8 @@ def parse_posts_from_page(html: str):
         # Body text
         body_el = post_div.select_one(BODY_SELECTOR)
         text = body_el.get_text("\n", strip=True) if body_el else None
+        quotes = _extract_quote_targets(post_div)
+        mentions = _extract_mentions(body_el)
 
         # Post ID
         post_id = _extract_post_id(post_div)
@@ -191,22 +275,76 @@ def parse_posts_from_page(html: str):
             "profile_url": profile_url,
             "timestamp": timestamp,
             "text": text,
+            "quotes": quotes,
+            "mentions": mentions,
         })
-
-        # TODO: REMOVE THIS LATER, THIS JUST FOR TESTING!
-        if idx >= 5:
-            break
 
     return posts
 
 
+def _build_interactions_for_post(
+    *,
+    thread_id: str,
+    post_row: dict,
+    quotes: list[dict],
+    mentions: list[dict],
+    post_author_index: dict[str, dict],
+) -> list[dict]:
+    interactions: list[dict] = []
+    replying_post_id = post_row.get("post_id")
+    if not replying_post_id:
+        return interactions
+
+    source_user_id = post_row.get("user_id")
+    scraped_at = post_row.get("scraped_at")
+
+    for quote in quotes:
+        target_post_id = quote.get("target_post_id")
+        target_user_id = None
+        if target_post_id and target_post_id in post_author_index:
+            target_user_id = post_author_index[target_post_id].get("user_id")
+        interactions.append({
+            "interaction_id": str(uuid4()),
+            "replying_post_id": replying_post_id,
+            "target_post_id": target_post_id,
+            "source_user_id": source_user_id,
+            "target_user_id": target_user_id,
+            "thread_id": thread_id,
+            "interaction_type": "quote",
+            "confidence": 1.0,
+            "scraped_at": scraped_at,
+        })
+
+    for mention in mentions:
+        profile_url = mention.get("profile_url")
+        target_user_id = mention.get("user_id")
+        if not target_user_id and profile_url:
+            target_user_id = extract_user_id_from_profile_url(profile_url)
+        if not target_user_id and not mention.get("username"):
+            continue
+        interactions.append({
+            "interaction_id": str(uuid4()),
+            "replying_post_id": replying_post_id,
+            "target_post_id": None,
+            "source_user_id": source_user_id,
+            "target_user_id": target_user_id,
+            "thread_id": thread_id,
+            "interaction_type": "mention",
+            "confidence": 0.7,
+            "scraped_at": scraped_at,
+        })
+
+    return interactions
+
 def scrape_thread(thread_url: str, user_cache: dict[str, dict], max_pages: int = 20):
     """
-    Scrape all posts in a thread and enrich with user_id via user_cache.
-    Returns list of post dicts with keys:
-      thread_url, page_url, post_id, user_id, username, timestamp, text
+    Scrape all posts in a thread, enrich with user metadata, and derive interactions.
+    Returns (posts, interactions).
     """
-    all_posts = []
+    all_posts: list[dict] = []
+    interactions: list[dict] = []
+    post_author_index: dict[str, dict] = {}
+    thread_id = _thread_id_from_url(thread_url)
     pages = get_thread_pages(thread_url, max_pages=max_pages)
 
     for page_url in pages:
@@ -218,6 +356,8 @@ def scrape_thread(thread_url: str, user_cache: dict[str, dict], max_pages: int =
             profile_url = p.get("profile_url")
             user_id = None
             username = p.get("username")
+            quotes = p.get("quotes") or []
+            mentions = p.get("mentions") or []
 
             if profile_url:
                 user = get_or_fetch_user(profile_url, user_cache)
@@ -230,16 +370,35 @@ def scrape_thread(thread_url: str, user_cache: dict[str, dict], max_pages: int =
                     # fallback: derive from URL
                     user_id = extract_user_id_from_profile_url(profile_url)
 
+            scraped_at = _current_scrape_timestamp()
+            post_id = p.get("post_id")
             post_row = {
+                "thread_id": thread_id,
                 "thread_url": thread_url,
                 "page_url": page_url,
-                "post_id": p.get("post_id"),
+                "post_id": post_id,
                 "user_id": user_id,
                 "username": username,
                 "timestamp": p.get("timestamp"),
                 "text": p.get("text"),
+                "scraped_at": scraped_at,
             }
             all_posts.append(post_row)
+            if post_id:
+                post_author_index[post_id] = {
+                    "user_id": user_id,
+                    "username": username,
+                }
+
+            interactions.extend(
+                _build_interactions_for_post(
+                    thread_id=thread_id,
+                    post_row=post_row,
+                    quotes=quotes,
+                    mentions=mentions,
+                    post_author_index=post_author_index,
+                )
+            )
 
     print(f"[scrape-thread] Got {len(all_posts)} posts from {thread_url}")
-    return all_posts
+    return all_posts, interactions

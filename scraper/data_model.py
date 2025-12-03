@@ -1,6 +1,7 @@
 """Shared schema metadata for CSV outputs."""
 
 POSTS_FIELDNAMES: list[str] = [
+    "thread_id",
     "thread_url",
     "page_url",
     "post_id",
@@ -8,6 +9,7 @@ POSTS_FIELDNAMES: list[str] = [
     "username",
     "timestamp",
     "text",
+    "scraped_at",
 ]
 
 USERS_FIELDNAMES: list[str] = [
@@ -29,5 +31,17 @@ USERS_FIELDNAMES: list[str] = [
     "points",
     "media_count",
     "showcase_count",
+    "scraped_at",
+]
+
+INTERACTIONS_FIELDNAMES: list[str] = [
+    "interaction_id",
+    "replying_post_id",
+    "target_post_id",
+    "source_user_id",
+    "target_user_id",
+    "thread_id",
+    "interaction_type",
+    "confidence",
     "scraped_at",
 ]

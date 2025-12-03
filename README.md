@@ -54,6 +54,8 @@ Even though the pipeline currently writes CSVs, we treat them as two normalized 
 | `showcase_count`      | integer     | Tooltip “Showcase items”.                              |
 | `scraped_at`          | timestamptz | When this profile snapshot was saved.                  |
 
+# TODO: add following + follower lists
+
 CSV rows store blanks for `NULL` values so they load cleanly later.
 
 ### `Interaction` (derived)

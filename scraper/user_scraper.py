@@ -12,7 +12,6 @@ def _safe_text(element) -> str | None:
         return None
     return element.get_text(" ", strip=True)
 
-
 def extract_user_id_from_profile_url(profile_url: str) -> str | None:
     """
     Extract a stable user_id from a XenForo-style member URL.
@@ -38,13 +37,11 @@ def extract_user_id_from_profile_url(profile_url: str) -> str | None:
 
     return None
 
-
 def _clean_int(value: str | None) -> int | None:
     if not value:
         return None
     digits = re.sub(r"[^0-9]", "", value)
     return int(digits) if digits else None
-
 
 def _as_string(value):
     """Convert BeautifulSoup attribute values (which may be lists) to strings."""
@@ -55,7 +52,6 @@ def _as_string(value):
             return None
         value = value[0]
     return str(value)
-
 
 def _collect_stats(pairs: list) -> dict[str, str]:
     stats: dict[str, str] = {}
@@ -69,13 +65,11 @@ def _collect_stats(pairs: list) -> dict[str, str]:
         stats[label] = value
     return stats
 
-
 def _fallback_username(profile_url: str) -> str | None:
     path = urlparse(profile_url).path.rstrip("/")
     if "." in path:
         return path.split("/")[-1].split(".")[0]
     return path.split("/")[-1] or None
-
 
 def _extract_location_from_header(soup: BeautifulSoup) -> str | None:
     link = soup.select_one(".memberHeader-blurb a[href*='location-info']")
@@ -89,7 +83,6 @@ def _extract_location_from_header(soup: BeautifulSoup) -> str | None:
     text = blurb.get_text(" ", strip=True)
     match = re.search(r"from\s+(.*)", text, re.IGNORECASE)
     return match.group(1).strip(" .") if match else None
-
 
 def _build_user_record(
     *,
@@ -134,7 +127,6 @@ def _build_user_record(
         "scraped_at": scraped_at,
     }
 
-
 def _has_meaningful_profile_data(user: dict) -> bool:
     metric_keys = [
         "replies",
@@ -147,7 +139,6 @@ def _has_meaningful_profile_data(user: dict) -> bool:
     if any(user.get(k) is not None for k in metric_keys):
         return True
     return bool(user.get("join_date") or user.get("role"))
-
 
 def parse_user_about_page(html: str) -> dict[str, str | None]:
     """Extract optional demographic/profile fields from the About tab."""
@@ -189,7 +180,6 @@ def parse_user_about_page(html: str) -> dict[str, str | None]:
 
     return details
 
-
 def _merge_user_details(user: dict, extra: dict[str, str | None]) -> None:
     for key, value in extra.items():
         if value:
@@ -225,6 +215,7 @@ def parse_user_profile_page(html: str, profile_url: str, user_id: str | None) ->
     if not join_date:
         join_date = stats.get("joined")
 
+    # TODO: get about me description as well, and follower and following list
     user = _build_user_record(
         user_id=user_id,
         profile_url=profile_url,

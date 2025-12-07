@@ -3,6 +3,7 @@ import csv
 from scraper.data_model import (
     INTERACTIONS_FIELDNAMES,
     POSTS_FIELDNAMES,
+    THREADS_FIELDNAMES,
     USERS_FIELDNAMES,
 )
 from scraper.post_scraper import scrape_thread
@@ -15,11 +16,16 @@ def main() -> None:
     posts_csv_path = "posts.csv"
     users_csv_path = "users.csv"
     interactions_csv_path = "interactions.csv"
+    threads_csv_path = "threads.csv"
 
     user_cache: dict[str, dict] = {}
 
     print(f"[single-thread] Scraping {thread_url} (max_pages={thread_page_limit})")
-    posts, interactions = scrape_thread(thread_url, user_cache, max_pages=thread_page_limit)
+    posts, interactions, thread_row = scrape_thread(
+        thread_url,
+        user_cache,
+        max_pages=thread_page_limit,
+    )
 
     with open(posts_csv_path, "w", newline="", encoding="utf-8") as posts_f:
         writer = csv.DictWriter(posts_f, fieldnames=POSTS_FIELDNAMES)
@@ -33,6 +39,11 @@ def main() -> None:
         for row in interactions:
             writer.writerow(row)
 
+    with open(threads_csv_path, "w", newline="", encoding="utf-8") as threads_f:
+        writer = csv.DictWriter(threads_f, fieldnames=THREADS_FIELDNAMES)
+        writer.writeheader()
+        writer.writerow(thread_row)
+
     with open(users_csv_path, "w", newline="", encoding="utf-8") as users_f:
         writer = csv.DictWriter(users_f, fieldnames=USERS_FIELDNAMES)
         writer.writeheader()
@@ -40,7 +51,7 @@ def main() -> None:
             writer.writerow(user)
 
     print(
-        f"[single-thread] Done. Wrote {posts_csv_path}, {users_csv_path}, and {interactions_csv_path}"
+        f"[single-thread] Done. Wrote {posts_csv_path}, {users_csv_path}, {interactions_csv_path}, and {threads_csv_path}"
     )
 
 

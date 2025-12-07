@@ -3,6 +3,7 @@ import csv
 from scraper.data_model import (
     INTERACTIONS_FIELDNAMES,
     POSTS_FIELDNAMES,
+    THREADS_FIELDNAMES,
     USERS_FIELDNAMES,
 )
 from scraper.post_scraper import get_thread_list, scrape_thread
@@ -16,6 +17,7 @@ def main():
     posts_csv_path = "posts.csv"
     users_csv_path = "users.csv"
     interactions_csv_path = "interactions.csv"
+    threads_csv_path = "threads.csv"
 
     # Collect thread URLs
     thread_urls = get_thread_list(
@@ -31,6 +33,7 @@ def main():
     with (
         open(posts_csv_path, "w", newline="", encoding="utf-8") as posts_f,
         open(interactions_csv_path, "w", newline="", encoding="utf-8") as interactions_f,
+        open(threads_csv_path, "w", newline="", encoding="utf-8") as threads_f,
     ):
         posts_writer = csv.DictWriter(posts_f, fieldnames=POSTS_FIELDNAMES)
         posts_writer.writeheader()
@@ -38,10 +41,18 @@ def main():
         interactions_writer = csv.DictWriter(interactions_f, fieldnames=INTERACTIONS_FIELDNAMES)
         interactions_writer.writeheader()
 
+        threads_writer = csv.DictWriter(threads_f, fieldnames=THREADS_FIELDNAMES)
+        threads_writer.writeheader()
+
         for i, t_url in enumerate(thread_urls, start=1):
             print(f"[main] ({i}/{len(thread_urls)}) Scraping thread: {t_url}")
             try:
-                posts, interactions = scrape_thread(t_url, user_cache, max_pages=thread_page_limit)
+                posts, interactions, thread_row = scrape_thread(
+                    t_url,
+                    user_cache,
+                    max_pages=thread_page_limit,
+                    forum_url=forum_url,
+                )
             except Exception as e:
                 print(f"[main] Error scraping {t_url}: {e}")
                 continue
@@ -50,6 +61,7 @@ def main():
                 posts_writer.writerow(row)
             for interaction in interactions:
                 interactions_writer.writerow(interaction)
+            threads_writer.writerow(thread_row)
 
     # Write users.csv
     with open(users_csv_path, "w", newline="", encoding="utf-8") as users_f:
@@ -58,7 +70,9 @@ def main():
         for user in user_cache.values():
             users_writer.writerow(user)
 
-    print(f"[main] Done. Wrote {posts_csv_path}, {users_csv_path}, and {interactions_csv_path}")
+    print(
+        f"[main] Done. Wrote {posts_csv_path}, {users_csv_path}, {interactions_csv_path}, and {threads_csv_path}"
+    )
 
 if __name__ == "__main__":
     main()

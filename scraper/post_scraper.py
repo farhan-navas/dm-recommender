@@ -120,8 +120,8 @@ def _extract_mentions(body_el) -> list[dict]:
 
 def get_thread_list(
     forum_url: str,
-    max_pages: int = 3,
-    thread_limit: int | None = 5,
+    max_pages: int,
+    thread_limit: int | None,
 ):
     """
     Scrape a forum section index to collect thread URLs.
@@ -334,15 +334,21 @@ def _build_interactions_for_post(
 
     return interactions
 
-def scrape_thread(thread_url: str, user_cache: dict[str, dict], max_pages: int = 20):
+def scrape_thread(
+    thread_url: str,
+    user_cache: dict[str, dict],
+    max_pages: int,
+    forum_url: str | None = None,
+):
     """
     Scrape all posts in a thread, enrich with user metadata, and derive interactions.
-    Returns (posts, interactions).
+    Returns (posts, interactions, thread_row).
     """
     all_posts: list[dict] = []
     interactions: list[dict] = []
     post_author_index: dict[str, dict] = {}
     thread_id = _thread_id_from_url(thread_url)
+    thread_scrape_ts = _current_scrape_timestamp()
     pages = get_thread_pages(thread_url, max_pages=max_pages)
 
     for page_url in pages:
@@ -398,5 +404,12 @@ def scrape_thread(thread_url: str, user_cache: dict[str, dict], max_pages: int =
                 )
             )
 
-    print(f"[scrape-thread] Got {len(all_posts)} posts from {thread_url}")
-    return all_posts, interactions
+    thread_row = {
+        "thread_id": thread_id,
+        "thread_url": thread_url,
+        "forum_url": forum_url,
+        "first_seen": thread_scrape_ts,
+        "last_seen": thread_scrape_ts,
+        "scraped_at": thread_scrape_ts,
+    }
+    return all_posts, interactions, thread_row

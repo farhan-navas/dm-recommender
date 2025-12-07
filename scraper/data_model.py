@@ -45,3 +45,12 @@ INTERACTIONS_FIELDNAMES: list[str] = [
     "confidence",
     "scraped_at",
 ]
+
+THREADS_FIELDNAMES: list[str] = [
+    "thread_id",
+    "thread_url",
+    "forum_url",
+    "first_seen",
+    "last_seen",
+    "scraped_at",
+]

@@ -11,9 +11,10 @@ from scraper.post_scraper import get_thread_list, scrape_thread
 def main():
     # Config
     forum_url = "https://www.personalitycafe.com/forums/myers-briggs-forum.49/"
-    max_forum_pages = 3
-    thread_limit = 1
-    thread_page_limit = 10
+    # TODO: for testing, set limits here, eg: 3, 1, 10
+    max_forum_pages = None
+    thread_limit = None
+    thread_page_limit = None
     posts_csv_path = "posts.csv"
     users_csv_path = "users.csv"
     interactions_csv_path = "interactions.csv"
@@ -28,12 +29,14 @@ def main():
     print(f"[main] Fetched {len(thread_urls)} thread URLs")
 
     user_cache: dict[str, dict] = {}
+    written_user_ids : set[str] = set()
 
-    # Scrape posts + users + interactions
+    # Scrape posts + users + interactions + threads
     with (
         open(posts_csv_path, "w", newline="", encoding="utf-8") as posts_f,
         open(interactions_csv_path, "w", newline="", encoding="utf-8") as interactions_f,
         open(threads_csv_path, "w", newline="", encoding="utf-8") as threads_f,
+        open(users_csv_path, "w", newline="", encoding="utf-8") as users_f,
     ):
         posts_writer = csv.DictWriter(posts_f, fieldnames=POSTS_FIELDNAMES)
         posts_writer.writeheader()
@@ -44,6 +47,9 @@ def main():
         threads_writer = csv.DictWriter(threads_f, fieldnames=THREADS_FIELDNAMES)
         threads_writer.writeheader()
 
+        users_writer = csv.DictWriter(users_f, fieldnames=USERS_FIELDNAMES)
+        users_writer.writeheader()
+
         for i, t_url in enumerate(thread_urls, start=1):
             print(f"[main] ({i}/{len(thread_urls)}) Scraping thread: {t_url}")
             try:
@@ -53,22 +59,24 @@ def main():
                     max_pages=thread_page_limit,
                     forum_url=forum_url,
                 )
+
             except Exception as e:
                 print(f"[main] Error scraping {t_url}: {e}")
                 continue
 
             for row in posts:
                 posts_writer.writerow(row)
+
             for interaction in interactions:
                 interactions_writer.writerow(interaction)
-            threads_writer.writerow(thread_row)
 
-    # Write users.csv
-    with open(users_csv_path, "w", newline="", encoding="utf-8") as users_f:
-        users_writer = csv.DictWriter(users_f, fieldnames=USERS_FIELDNAMES)
-        users_writer.writeheader()
-        for user in user_cache.values():
-            users_writer.writerow(user)
+            threads_writer.writerow(thread_row)
+            
+            for user_id, user in user_cache.items():
+                if not user_id or user_id in written_user_ids:
+                    continue
+                users_writer.writerow(user)
+                written_user_ids.add(user_id)
 
     print(
         f"[main] Done. Wrote {posts_csv_path}, {users_csv_path}, {interactions_csv_path}, and {threads_csv_path}"

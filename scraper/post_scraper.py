@@ -120,8 +120,8 @@ def _extract_mentions(body_el) -> list[dict]:
 
 def get_thread_list(
     forum_url: str,
-    max_pages: int,
-    thread_limit: int | None,
+    max_pages: int | None = 3,
+    thread_limit: int | None = 5,
 ):
     """
     Scrape a forum section index to collect thread URLs.
@@ -131,8 +131,9 @@ def get_thread_list(
     seen = set()
     ordered_threads: list[str] = []
     page_url = forum_url
+    page = 1
 
-    for page in range(1, max_pages + 1):
+    while True:
         print(f"[threads] Fetching forum index page {page}: {page_url}")
         html = fetch(page_url)
         soup = BeautifulSoup(html, "html.parser")
@@ -156,6 +157,9 @@ def get_thread_list(
 
         if thread_limit is not None and len(ordered_threads) >= thread_limit:
             break
+            
+        if max_pages is not None and page >= max_pages:
+            break
 
         # Find "next page" (if any)
         next_link = soup.find("a", rel="next")
@@ -167,19 +171,25 @@ def get_thread_list(
         if not next_href:
             break
         page_url = absolute_url(str(next_href))
+        page += 1
 
     print(f"[threads] Collected {len(ordered_threads)} thread URLs.")
     return ordered_threads
 
-def get_thread_pages(thread_url: str, max_pages: int = 20):
+def get_thread_pages(thread_url: str, max_pages: int | None = 20):
     """
     Return a list of URLs for all pages inside a thread.
     """
     pages = [thread_url]
     page_url = thread_url
+    page = 1
 
-    for page in range(2, max_pages + 1):
-        print(f"[thread-pages] Checking for page {page} of thread {thread_url}")
+    while True:
+        if max_pages is not None and page >= max_pages:
+            break
+
+        next_page = page + 1
+        print(f"[thread-pages] Checking for page {next_page} of thread {thread_url}")
         html = fetch(page_url)
         soup = BeautifulSoup(html, "html.parser")
         next_link = soup.find("a", rel="next")
@@ -192,6 +202,7 @@ def get_thread_pages(thread_url: str, max_pages: int = 20):
             break
         page_url = absolute_url(str(next_href))
         pages.append(page_url)
+        page += 1
 
     return pages
 

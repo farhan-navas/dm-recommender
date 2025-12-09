@@ -15,6 +15,7 @@ BASE_URL = "https://www.personalitycafe.com"
 # Thread index selectors
 THREAD_CARD_SELECTOR = "div.structItem--thread"
 THREAD_LINK_SELECTOR = "h3.structItem-title a"
+NEXT_PAGE_SELECTOR = "a.pageNav-jump--next"
 
 # Post selectors
 POST_SELECTOR = "article.js-post"
@@ -22,7 +23,6 @@ USERNAME_SELECTOR = ".MessageCard__user-info__name"
 BODY_SELECTOR = ".message-body .bbWrapper"
 QUOTE_BLOCK_SELECTOR = "blockquote.bbCodeBlock--quote"
 QUOTE_SOURCE_LINK_SELECTOR = ".bbCodeBlock-sourceJump"
-NEXT_PAGE_SELECTOR = "a.pageNav-jump--next"
 
 def absolute_url(href: str) -> str:
     if href.startswith("http"):
@@ -120,7 +120,7 @@ def _extract_mentions(body_el) -> list[dict]:
 
 def get_thread_list(
     forum_url: str,
-    max_pages: int | None = 3,
+    max_pages: int | None,
     thread_limit: int | None = 5,
 ):
     """
@@ -169,7 +169,7 @@ def get_thread_list(
         next_href = next_link.get("href")
         if not next_href:
             break
-        
+
         page_url = absolute_url(str(next_href))
         page += 1
 
@@ -192,14 +192,15 @@ def get_thread_pages(thread_url: str, max_pages: int | None = 20):
         print(f"[thread-pages] Checking for page {next_page} of thread {thread_url}")
         html = fetch(page_url)
         soup = BeautifulSoup(html, "html.parser")
-        next_link = soup.find("a", rel="next")
+
+        next_link = soup.select_one(NEXT_PAGE_SELECTOR)
         if not next_link:
             break
+
         next_href = next_link.get("href")
-        if isinstance(next_href, list):
-            next_href = next_href[0]
         if not next_href:
             break
+
         page_url = absolute_url(str(next_href))
         pages.append(page_url)
         page += 1
@@ -240,11 +241,11 @@ def parse_posts_from_page(html: str):
     soup = BeautifulSoup(html, "html.parser")
 
     # Optional: debug HTML to inspect if selectors break
-    digest = hashlib.sha1(html.encode("utf-8", "ignore")).hexdigest()
-    debug_path = Path("debug_html") / f"page-{digest}.html"
-    debug_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(debug_path, "w", encoding="utf-8") as debug_file:
-        debug_file.write(soup.prettify())
+    # digest = hashlib.sha1(html.encode("utf-8", "ignore")).hexdigest()
+    # debug_path = Path("debug_html") / f"page-{digest}.html"
+    # debug_path.parent.mkdir(parents=True, exist_ok=True)
+    # with open(debug_path, "w", encoding="utf-8") as debug_file:
+    #     debug_file.write(soup.prettify())
 
     posts = []
 

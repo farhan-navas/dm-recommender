@@ -10,7 +10,6 @@ from scraper.post_scraper import scrape_thread
 
 
 def main() -> None:
-    # --- Config ---
     thread_url = "https://www.personalitycafe.com/threads/ask-an-istj-relationship-question-thread.63195/"
     thread_page_limit = 10
     posts_csv_path = "posts.csv"
@@ -20,7 +19,7 @@ def main() -> None:
 
     user_cache: dict[str, dict] = {}
 
-    print(f"[single-thread] Scraping {thread_url} (max_pages={thread_page_limit})")
+    print(f"[thread-runner] Scraping {thread_url} (max_pages={thread_page_limit})")
     posts, interactions, thread_row = scrape_thread(
         thread_url,
         user_cache,
@@ -51,9 +50,8 @@ def main() -> None:
             writer.writerow(user)
 
     print(
-        f"[single-thread] Done. Wrote {posts_csv_path}, {users_csv_path}, {interactions_csv_path}, and {threads_csv_path}"
+        f"[thread-runner] Done. Wrote {posts_csv_path}, {users_csv_path}, {interactions_csv_path}, and {threads_csv_path}"
     )
-
 
 if __name__ == "__main__":
     main()

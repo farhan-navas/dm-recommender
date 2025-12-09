@@ -9,16 +9,16 @@ from scraper.data_model import (
 from scraper.post_scraper import get_thread_list, scrape_thread
 
 def main():
-    # Config
-    forum_url = "https://www.personalitycafe.com/forums/myers-briggs-forum.49/"
-    # TODO: for testing, set limits here, eg: 3, 1, 10
+    curr_forum = "myers-briggs-forum.49/"
+    forum_url = f"https://www.personalitycafe.com/forums/{curr_forum}"
+    # TODO: for testing, we can set limits here, eg: 3, 1, 10
     max_forum_pages = None
     thread_limit = None
     thread_page_limit = None
-    posts_csv_path = "posts.csv"
+    threads_csv_path = f"threads-{curr_forum}.csv"
+    posts_csv_path = f"posts-{curr_forum}.csv"
     users_csv_path = "users.csv"
     interactions_csv_path = "interactions.csv"
-    threads_csv_path = "threads.csv"
 
     # Collect thread URLs
     thread_urls = get_thread_list(

@@ -22,7 +22,7 @@ USERNAME_SELECTOR = ".MessageCard__user-info__name"
 BODY_SELECTOR = ".message-body .bbWrapper"
 QUOTE_BLOCK_SELECTOR = "blockquote.bbCodeBlock--quote"
 QUOTE_SOURCE_LINK_SELECTOR = ".bbCodeBlock-sourceJump"
-
+NEXT_PAGE_SELECTOR = "a.pageNav-jump--next"
 
 def absolute_url(href: str) -> str:
     if href.startswith("http"):
@@ -162,14 +162,14 @@ def get_thread_list(
             break
 
         # Find "next page" (if any)
-        next_link = soup.find("a", rel="next")
+        next_link = soup.select_one(NEXT_PAGE_SELECTOR)
         if not next_link:
             break
+
         next_href = next_link.get("href")
-        if isinstance(next_href, list):
-            next_href = next_href[0]
         if not next_href:
             break
+        
         page_url = absolute_url(str(next_href))
         page += 1
 
@@ -348,7 +348,7 @@ def _build_interactions_for_post(
 def scrape_thread(
     thread_url: str,
     user_cache: dict[str, dict],
-    max_pages: int,
+    max_pages: int | None,
     forum_url: str | None = None,
 ):
     """

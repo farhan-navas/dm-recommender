@@ -26,22 +26,19 @@ class RateLimiter:
                 time.sleep(sleep_for)
         self.calls.append(time.time())
 
-
 SESSION = requests.Session()
 SESSION.headers.update({
     "User-Agent": "Farhan-ResearchBot/0.1 (+https://github.com/farhan-navas; contact: farhanmnavas@gmail.com)",
 })
 
 DEFAULT_MAX_CALLS = 1
-DEFAULT_PERIOD = 3.0
+DEFAULT_PERIOD = 2.0
 _limiter: Optional[RateLimiter] = None
-
 
 def configure_rate_limiter(max_calls: int = DEFAULT_MAX_CALLS, period: float = DEFAULT_PERIOD) -> None:
     """Set global rate limiter configuration before issuing requests."""
     global _limiter
     _limiter = RateLimiter(max_calls=max_calls, period=period)
-
 
 def _get_limiter() -> RateLimiter:
     global _limiter

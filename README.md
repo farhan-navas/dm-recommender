@@ -90,3 +90,5 @@ uv run run_forum_scrape.py
 ```
 
 Default settings (inside `scraper.post_scraper.main`) crawl the Myers-Briggs forum, respect a conservative rate limit (polite scraping! for now, one request every 3s), and emit the CSVs in the project root.
+
+TODO: there are subforums inside the main forums so we will need to scrape these as well, currently it is not included inside forums.csv. For context, Announcements has 6 sub-forums (unaccounted for), Intros has 1 sub-forum, etc...

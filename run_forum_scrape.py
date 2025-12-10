@@ -45,10 +45,10 @@ def scrape_single_forum(
     thread_page_limit: int | None,
 ):
     slug = _slug_from_url(forum_url)
-    threads_csv_path = f"threads-{slug}.csv"
-    posts_csv_path = f"posts-{slug}.csv"
-    users_csv_path = f"users-{slug}.csv"
-    interactions_csv_path = f"interactions-{slug}.csv"
+    threads_csv_path = f"data/threads-{slug}.csv"
+    posts_csv_path = f"data/posts-{slug}.csv"
+    users_csv_path = f"data/users-{slug}.csv"
+    interactions_csv_path = f"data/interactions-{slug}.csv"
 
     print(f"[main] Scraping forum '{forum_name}' ({forum_url})")
 

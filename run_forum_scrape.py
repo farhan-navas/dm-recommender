@@ -1,3 +1,4 @@
+import argparse
 import csv
 import re
 from pathlib import Path
@@ -113,23 +114,41 @@ def scrape_single_forum(
         )
     )
 
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Scrape a single forum by index from forums.csv")
+    parser.add_argument(
+        "--forum-index",
+        type=int,
+        default=0,
+        help="Zero-based index inside forums.csv to scrape",
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
-    # Common limits for every forum; set to small values while testing.
-    max_forum_pages = None
-    thread_limit = None
-    thread_page_limit = None
-
+    args = _parse_args()
     forums = load_forums(FORUMS_CSV_PATH)
-    print(f"[main] Loaded {len(forums)} forums from {FORUMS_CSV_PATH}")
+    if not forums:
+        raise RuntimeError("forums.csv is empty, run get_forums_scrape.py first")
 
-    for forum in forums:
-        scrape_single_forum(
-            forum_name=forum["forum_name"],
-            forum_url=forum["forum_href"],
-            max_forum_pages=max_forum_pages,
-            thread_limit=thread_limit,
-            thread_page_limit=thread_page_limit,
+    if args.forum_index < 0 or args.forum_index >= len(forums):
+        raise IndexError(
+            f"forum-index {args.forum_index} out of range (0-{len(forums) - 1})"
         )
+
+    forum = forums[args.forum_index]
+    print(
+        f"[main] Loaded {len(forums)} forums from {FORUMS_CSV_PATH}; "
+        f"scraping index {args.forum_index}: {forum['forum_name']}"
+    )
+
+    scrape_single_forum(
+        forum_name=forum["forum_name"],
+        forum_url=forum["forum_href"],
+        max_forum_pages=None,
+        thread_limit=None,
+        thread_page_limit=None,
+    )
 
 
 if __name__ == "__main__":

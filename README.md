@@ -4,7 +4,7 @@ Lightweight Python scraper that collects thread posts and public user metadata f
 
 ## Initial DB Schema
 
-Even though the pipeline currently writes CSVs, we treat them as two normalized tables so they can drop directly into a lightweight Postgres instance later.
+Even though the pipeline currently writes CSVs, we treat them as normalized tables so that after initial processing, they can be dropped directly into a lightweight Postgres instance later.
 
 ### `Thread`
 
@@ -81,14 +81,32 @@ Schema:
 
 ## Running scraper
 
-Orchestrator lives in `scraper/post_scraper.py`. Can be executed directly or via `main.py`:
+Orchestrator lives in `scraper/post_scraper.py`. Can be executed directly or via:
 
 ```bash
-python3 run_forum_scrape.py
-# or
 uv run run_forum_scrape.py
 ```
 
-Default settings (inside `scraper.post_scraper.main`) crawl the Myers-Briggs forum, respect a conservative rate limit (polite scraping! for now, one request every 3s), and emit the CSVs in the project root.
+Respect a conservative rate limit (polite scraping! for now, one request every 3s), and emit CSVs in `data/`. Some forums require auth, so I will need to pass in my own auth cookie, or use mechanical soup. Will figure it out.
 
-TODO: there are subforums inside the main forums so we will need to scrape these as well, currently it is not included inside forums.csv. For context, Announcements has 6 sub-forums (unaccounted for), Intros has 1 sub-forum, etc...
+## Run Configurations (up till now)
+
+New Update -> forum_scraper now takes in a int arg for the forum index that it will scrape. This way we can scrape multiple forums on the same server.
+
+COM1:
+
+- 0 -> Announcements, Subforums: 1, 2, 3, 4, 5, 6
+- 7 -> Intro, Subs: 8
+
+COM2:
+
+- 10 -> What's my personality type? -> threads...csv did not write out, users...csv less than expected, Subs: 11
+
+- 13 -> Cognitive Functions
+- 14 -> Socionomics Forum, Subs: 15
+- 16 -> Enneagram Personality Theory Forum, Subs: 17 to 29
+
+COM3:
+
+- 12 -> Myers Briggs Forum
+-

@@ -124,7 +124,6 @@ def _parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
-
 def main() -> None:
     args = _parse_args()
     forums = load_forums(FORUMS_CSV_PATH)
@@ -149,7 +148,6 @@ def main() -> None:
         thread_limit=None,
         thread_page_limit=None,
     )
-
 
 if __name__ == "__main__":
     main()

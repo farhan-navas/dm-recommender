@@ -8,7 +8,7 @@ from uuid import uuid4
 from bs4 import BeautifulSoup
 
 from scraper.rate_limiter import fetch
-from scraper.user_scraper import (get_or_fetch_user, extract_user_id_from_profile_url)
+from scraper.user_scraper import get_or_fetch_user, extract_user_id_from_profile_url
 
 BASE_URL = "https://www.personalitycafe.com"
 
@@ -68,14 +68,12 @@ def _parse_post_id_from_quote_link(link) -> str | None:
             return match.group(1)
     return None
 
-
 def _clean_quote_username(raw: str | None) -> str | None:
     if not raw:
         return None
     cleaned = raw.strip()
     cleaned = re.sub(r"\s*said:?$", "", cleaned, flags=re.IGNORECASE)
     return cleaned or None
-
 
 def _extract_quote_targets(post_div) -> list[dict]:
     quotes: list[dict] = []
@@ -90,7 +88,6 @@ def _extract_quote_targets(post_div) -> list[dict]:
             "target_username": username,
         })
     return quotes
-
 
 def _extract_mentions(body_el) -> list[dict]:
     mentions: list[dict] = []
@@ -176,37 +173,6 @@ def get_thread_list(
     print(f"[threads] Collected {len(ordered_threads)} thread URLs.")
     return ordered_threads
 
-def get_thread_pages(thread_url: str, max_pages: int | None = 20):
-    """
-    Return a list of URLs for all pages inside a thread.
-    """
-    pages = [thread_url]
-    page_url = thread_url
-    page = 1
-
-    while True:
-        if max_pages is not None and page >= max_pages:
-            break
-
-        next_page = page + 1
-        print(f"[thread-pages] Checking for page {next_page} of thread {thread_url}")
-        html = fetch(page_url)
-        soup = BeautifulSoup(html, "html.parser")
-
-        next_link = soup.select_one(NEXT_PAGE_SELECTOR)
-        if not next_link:
-            break
-
-        next_href = next_link.get("href")
-        if not next_href:
-            break
-
-        page_url = absolute_url(str(next_href))
-        pages.append(page_url)
-        page += 1
-
-    return pages
-
 def _extract_post_id(post_div) -> str | None:
     """
     Try to extract a stable post_id from attributes.
@@ -226,27 +192,18 @@ def _extract_post_id(post_div) -> str | None:
 
     return None
 
-def parse_posts_from_page(html: str):
+def parse_posts_from_page(soup: BeautifulSoup):
     """
-    Parse posts from one thread page.
+    Parse posts from one thread page soup.
     Returns a list of dicts:
-      {
-        "post_id",
-        "username",
-        "profile_url",
-        "timestamp",
-        "text",
-      }
+        {
+            "post_id",
+            "username",
+            "profile_url",
+            "timestamp",
+            "text",
+        }
     """
-    soup = BeautifulSoup(html, "html.parser")
-
-    # Optional: debug HTML to inspect if selectors break
-    # digest = hashlib.sha1(html.encode("utf-8", "ignore")).hexdigest()
-    # debug_path = Path("debug_html") / f"page-{digest}.html"
-    # debug_path.parent.mkdir(parents=True, exist_ok=True)
-    # with open(debug_path, "w", encoding="utf-8") as debug_file:
-    #     debug_file.write(soup.prettify())
-
     posts = []
 
     for post_div in soup.select(POST_SELECTOR):
@@ -287,10 +244,9 @@ def parse_posts_from_page(html: str):
             "text": text,
             "quotes": quotes,
             "mentions": mentions,
-        })
+        })     
 
     return posts
-
 
 def _build_interactions_for_post(
     *,
@@ -361,12 +317,15 @@ def scrape_thread(
     post_author_index: dict[str, dict] = {}
     thread_id = _thread_id_from_url(thread_url)
     thread_scrape_ts = _current_scrape_timestamp()
-    pages = get_thread_pages(thread_url, max_pages=max_pages)
 
-    for page_url in pages:
+    page_url = thread_url
+    page = 1
+
+    while True:
         print(f"[scrape-thread] Fetching page {page_url}")
         html = fetch(page_url)
-        page_posts = parse_posts_from_page(html)
+        soup = BeautifulSoup(html, "html.parser")
+        page_posts = parse_posts_from_page(soup)
 
         for p in page_posts:
             profile_url = p.get("profile_url")
@@ -415,6 +374,19 @@ def scrape_thread(
                     post_author_index=post_author_index,
                 )
             )
+
+        if max_pages is not None and page >= max_pages:
+            break
+
+        next_link = soup.select_one(NEXT_PAGE_SELECTOR)
+        if not next_link:
+            break
+        next_href = next_link.get("href")
+        if not next_href:
+            break
+
+        page_url = absolute_url(str(next_href))
+        page += 1
 
     thread_row = {
         "thread_id": thread_id,

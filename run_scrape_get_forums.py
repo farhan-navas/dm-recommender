@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from scraper.rate_limiter import fetch
 
 FORUM_INDEX_URL = "https://www.personalitycafe.com/forums/"
-OUTPUT_CSV = "forums-logged-in.csv"
+OUTPUT_CSV = "forums.csv"
 
 def parse_forums(html) -> list[dict[str, str | None]]:
     soup = BeautifulSoup(html, "html.parser")

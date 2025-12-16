@@ -93,20 +93,37 @@ Respect a conservative rate limit (polite scraping! for now, one request every 3
 
 New Update -> forum_scraper now takes in a int arg for the forum index that it will scrape. This way we can scrape multiple forums on the same server.
 
-COM1:
+COM1 (LTP):
 
 - 0 -> Announcements, Subforums: 1, 2, 3, 4, 5, 6
 - 7 -> Intro, Subs: 8
+- 35 -> Other Personality Theories, Subs: 36, 37
+- 89 -> History Buffs
 
-COM2:
+COM2 (TM):
 
-- 10 -> What's my personality type? -> threads...csv did not write out, users...csv less than expected, Subs: 11
-
+- 10 -> What's my personality type? -> threads...csv did not write out, users...csv less than expected
 - 13 -> Cognitive Functions
 - 14 -> Socionomics Forum, Subs: 15
 - 16 -> Enneagram Personality Theory Forum, Subs: 17 to 29
+- 75 -> General Psychology, Subs: 76, 77
+- 30 -> The Generations, Subs: 31 to 34
+- 38 -> Member Polls
+- 81 -> The Art Museum
+- 82 -> Book, Music & Movie Reviews, Subs: 83
+- 84 -> Education & Career Talk
+- 85 -> Science and Technology, Subs: 86
 
-COM3:
+- Also training conv-transformer
 
+COM3 (SMP):
+
+- Sub 11 -> Guess the type
 - 12 -> Myers Briggs Forum
--
+- 39 -> SJ's Temparement Forums, Subs: 40 to 47
+- 48 -> SP's Temparement Forums, Subs: 49 to 56
+- 57 -> NT's Temparement Forums, Subs: 58 to 65
+- 66 -> NF's Temparement Forum, Subs: 67 to 74
+- 87 -> Health and Fitness
+- 98 -> Advice Center
+- 110 -> Blog

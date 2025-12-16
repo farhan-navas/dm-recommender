@@ -12,5 +12,5 @@ tooltip/
 tooltip.*
 
 *.csv
-!forums.csv
+!forums-*.csv
 *.sh

@@ -1,0 +1,113 @@
+forum_index,forum_name,forum_href
+
+✅ 0,Announcements,/forums/announcements.2/  
+✅    1,Articles,/forums/articles.46/ 
+✅    2,Awards,/forums/awards.39/ 
+✅    3,Bulletin Board,/forums/bulletin-board.266/ 
+✅    4,Cafe Communique,/forums/cafe-communique.274/ 
+✅    5,Polls,/forums/polls.38/ 
+✅    6,Member Spotlight,/forums/member-spotlight.67/ 
+✅ 7,Intro,/forums/intro.23/ 
+✅    8,Partings,/forums/partings.306/ 
+🔒 9,Member Photos & Videos,/forums/member-photos-videos.58/ 
+✅ 10,What's my personality type?,/forums/what-s-my-personality-type.50/ 
+✅     11,Guess the type,/forums/guess-the-type.36/
+✅ 12,Myers Briggs Forum,/forums/myers-briggs-forum.49/ 
+✅ 13,Cognitive Functions,/forums/cognitive-functions.103/ 
+✅ 14,Socionics Forum,/forums/socionics-forum.112/ 
+✅     15,What's my Socionics type?,/forums/what-s-my-socionics-type.121/
+✅ 16,Enneagram Personality Theory Forum,/forums/enneagram-personality-theory-forum.51/ 
+✅     17,"Heart Triad - Types 2,3,4",/forums/heart-triad-types-2-3-4.59/
+✅         18,Type 2 Forum - The Helper,/forums/type-2-forum-the-helper.87/
+✅         19,Type 3 Forum - The Achiever,/forums/type-3-forum-the-achiever.88/
+✅         20,Type 4 Forum - The Individualist,/forums/type-4-forum-the-individualist.89/
+✅     21,"Head Triad - Types 5,6,7",/forums/head-triad-types-5-6-7.60/
+✅         22,Type 5 Forum - The Investigator,/forums/type-5-forum-the-investigator.90/
+✅         23,Type 6 Forum - The Loyalist,/forums/type-6-forum-the-loyalist.91/
+✅         24,Type 7 Forum - The Enthusiast,/forums/type-7-forum-the-enthusiast.92/
+✅     25,"Body Triad - Types 8,9,1",/forums/body-triad-types-8-9-1.61/
+✅         26,Type 1 Forum - The Reformer,/forums/type-1-forum-the-reformer.86/
+✅         27,Type 8 Forum - The Challenger,/forums/type-8-forum-the-challenger.93/
+✅         28,Type 9 Forum - The Peacemaker,/forums/type-9-forum-the-peacemaker.94/
+✅     29,What's my Enneagram type?,/forums/what-s-my-enneagram-type.95/
+✅ 30,The Generations,/forums/the-generations.98/
+✅     31,Baby Boomers Forum,/forums/baby-boomers-forum.99/
+✅     32,Generation X Forum,/forums/generation-x-forum.100/
+✅     33,Generation Y Forum,/forums/generation-y-forum.101/
+✅     34,Generation Z Forum,/forums/generation-z-forum.123/
+✅ 35,Other Personality Theories,/forums/other-personality-theories.314/
+✅     36,Jungian Theory,/forums/jungian-theory.322/
+✅     37,Big Five,/forums/big-five.330/
+✅ 38,Member Polls,/forums/member-polls.97/
+✅ 39,SJ's Temperament Forum- The Overseers,/forums/sj-s-temperament-forum-the-overseers.28/
+✅     40,ISTJ Forum - The Duty Fulfillers,/forums/istj-forum-the-duty-fulfillers.5/
+✅         41,ISTJ Articles,/forums/istj-articles.70/
+✅     42,ISFJ Forum - The Nurturers,/forums/isfj-forum-the-nurturers.7/
+✅         43,ISFJ Articles,/forums/isfj-articles.71/
+✅     44,ESTJ Forum - The Guardians,/forums/estj-forum-the-guardians.6/
+✅         45,ESTJ Articles,/forums/estj-articles.73/
+✅     46,ESFJ Forum - The Caregivers,/forums/esfj-forum-the-caregivers.8/
+✅         47,ESFJ Articles,/forums/esfj-articles.72/
+✅ 48,SP's Temperament Forum- The Creators,/forums/sp-s-temperament-forum-the-creators.29/
+✅     49,ISTP Forum - The Mechanics,/forums/istp-forum-the-mechanics.9/
+✅         50,ISTP Articles,/forums/istp-articles.74/
+✅     51,ESTP Forum - The Doers,/forums/estp-forum-the-doers.10/
+✅         52,ESTP Articles,/forums/estp-articles.76/
+✅     53,ESFP Forum - The Performers,/forums/esfp-forum-the-performers.11/
+✅         54,ESFP Articles,/forums/esfp-articles.77/
+✅     55,ISFP Forum - The Artists,/forums/isfp-forum-the-artists.12/
+✅         56,ISFP Articles,/forums/isfp-articles.75/
+✅ 57,NT's Temperament Forum- The Intellects,/forums/nt-s-temperament-forum-the-intellects.30/
+✅     58,INTJ Forum - The Scientists,/forums/intj-forum-the-scientists.14/
+✅         59,INTJ Articles,/forums/intj-articles.78/
+✅     60,INTP Forum - The Thinkers,/forums/intp-forum-the-thinkers.16/
+✅         61,INTP Articles,/forums/intp-articles.79/
+✅     62,ENTJ Forum - The Executives,/forums/entj-forum-the-executives.13/
+✅         63,ENTJ Articles,/forums/entj-articles.80/
+✅     64,ENTP Forum- The Visionaries,/forums/entp-forum-the-visionaries.15/
+✅         65,ENTP Articles,/forums/entp-articles.81/
+✅ 66,NF's Temperament Forum- The Dreamers,/forums/nf-s-temperament-forum-the-dreamers.31/
+✅     67,INFJ Forum - The Protectors,/forums/infj-forum-the-protectors.18/
+✅         68,INFJ Articles,/forums/infj-articles.82/
+✅     69,INFP Forum - The Idealists,/forums/infp-forum-the-idealists.20/
+✅         70,INFP Articles,/forums/infp-articles.83/
+✅     71,ENFJ Forum - The Givers,/forums/enfj-forum-the-givers.17/
+✅         72,ENFJ Articles,/forums/enfj-articles.84/
+✅     73,ENFP Forum - The Inspirers,/forums/enfp-forum-the-inspirers.19/
+✅         74,ENFP Articles,/forums/enfp-articles.85/
+✅ 75,General Psychology,/forums/general-psychology.45/
+✅     76,General Psychology Articles,/forums/general-psychology-articles.472/
+✅     77,Psychology News Forum,/forums/psychology-news-forum.105/
+🔒 78,Trends Forum,/forums/trends-forum.96/
+🔒 79,Critical Thinking & Philosophy,/forums/critical-thinking-philosophy.63/
+🔒     80,Spirituality and Religion,/forums/spirituality-and-religion.125/
+✅ 81,The Art Museum,/forums/the-art-museum.33/
+✅ 82,"Book, Music, & Movie Reviews",/forums/book-music-movie-reviews.48/
+✅     83,Video Games,/forums/video-games.210/
+✅ 84,Education & Career Talk,/forums/education-career-talk.47/
+✅ 85,Science and Technology,/forums/science-and-technology.102/
+✅     86,Climate Change and Climate Science,/forums/climate-change-and-climate-science.475/
+✅ 87,Health and Fitness,/forums/health-and-fitness.111/
+🔒 88,Sex and Relationships,/forums/sex-and-relationships.54/
+✅ 89,History Buffs,/forums/history-buffs.467/
+🔒 90,ChatBox,/forums/chatbox.178/
+❌ 91,Vendor Spotlight! Great Deals for Members,/forums/vendor-spotlight-great-deals-for-members.298/
+🔒 92,Community Help,/forums/community-help.24/
+🔒     93,Public Feedback,/forums/public-feedback.194/
+🔒     94,Private Feedback,/forums/private-feedback.202/
+🔒 95,General Chat,/forums/general-chat.22/
+🔒    96,Pets & Animals,/forums/pets-animals.218/
+🔒    97,Travel & Local Interests,/forums/travel-local-interests.234/
+✅ 98,Advice Center,/forums/advice-center.34/
+🔒 99,Entertainment Plaza,/forums/entertainment-plaza.40/
+🔒    100,Game Forum,/forums/game-forum.35/
+🔒    101,Personality Test Resources,/forums/personality-test-resources.37/
+🔒 102,Mafia,/forums/mafia.122/
+🔒     103,Past Games,/forums/past-games.333/
+🔒     104,Game Review,/forums/game-review.335/
+🔒 105,Spam World,/forums/spam-world.53/
+🔒     106,Spamworld Blogs,/forums/spamworld-blogs.474/
+🔒     107,Venting,/forums/venting.56/
+🔒     108,Gossip,/forums/gossip.62/
+❌ 109,Private Blogs,/forums/private-blogs.466/
+✅ 110,Blog,/forums/blog.345/
